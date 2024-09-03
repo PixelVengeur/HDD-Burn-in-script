@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Install dependencies
+apt-add-repository contrib
+apt-add-repository bookworm-backports
+apt install linux-headers-amd64
+apt install -t stable-backports zfsutils-linux
+sudo apt install f3 smartmontools 
+
 # Check if a drive is provided
 if [ "$#" -ne 1 ]; then
     echo "Usage: $0 /dev/sdX"
@@ -84,19 +91,19 @@ fi
 printf "\n\nRunning ZFS operations on %s" "$drive"
 
 printf "\tCreating pool %s" "TESTPOOL_${drive_name}"
-sudo zpool create -f -o ashift=12 -O logbias=throughput -O compress=lz4 -O dedup=off -O atime=off -O xattr=sa "TESTPOOL_${drive_name}" "$drive"
+sudo zpool create -f -o ashift=12 -O logbias=throughput -O compress=lz4 -O dedup=off -O atime=off -O xattr=sa -m "/mnt/TESTPOOL_${drive_name}" "TESTPOOL_${drive_name}" "$drive"
 printf "\tExporting pool %s" "TESTPOOL_${drive_name}"
 sudo zpool export "TESTPOOL_${drive_name}"
 printf "\tImporting pool %s" "TESTPOOL_${drive_name}"
 sudo zpool import -d /dev/disk/by-id "TESTPOOL_${drive_name}"
 printf "\tSetting permissions on pool %s" "TESTPOOL_${drive_name}"
-sudo chmod -R ugo+rw "/TESTPOOL_${drive_name}"
+sudo chmod -R ugo+rw "/mnt/TESTPOOL_${drive_name}"
 
 # f3write and f3read tests
 printf "\n\nRunning f3 operations on %s" "$drive"
-printf "\tRunning f3write over %s" "${drive}"
+printf "\tRunning f3write over %s" "$drive"
 sudo f3write "/TESTPOOL_${drive_name}"
-printf "\tRunning f3read over %s" "${drive}"
+printf "\tRunning f3read over %s" "$drive"
 sudo f3read "/TESTPOOL_${drive_name}"
 printf "\tRunning zpool_scrub on %s" "TESTPOOL_${drive_name}"
 sudo zpool scrub "TESTPOOL_${drive_name}"
