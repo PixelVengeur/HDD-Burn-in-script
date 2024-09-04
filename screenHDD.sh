@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # Install dependencies
-sudo apt-add-repository contrib
-sudo apt-add-repository bookworm-backports
-sudo apt install linux-headers-amd64
-sudo apt install -t stable-backports zfsutils-linux
-sudo apt install f3 smartmontools
+printf "Installing dependencies...\n\n"
+sleep 3
+sudo apt-get install software-properties-common f3 smartmontools tmux
+
+# Installation de ZFS
+# https://openzfs.github.io/openzfs-docs/Getting%20Started/Debian/index.html#installation
 
 # Check if at least one drive is provided
 if [ "$#" -lt 1 ]; then
