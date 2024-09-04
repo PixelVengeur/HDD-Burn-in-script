@@ -1,12 +1,5 @@
 #!/bin/bash
 
-# Install dependencies
-apt-add-repository contrib
-apt-add-repository bookworm-backports
-apt install linux-headers-amd64
-apt install -t stable-backports zfsutils-linux
-sudo apt install f3 smartmontools 
-
 # Check if a drive is provided
 if [ "$#" -ne 1 ]; then
     echo "Usage: $0 /dev/sdX"
