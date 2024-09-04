@@ -3,9 +3,9 @@
 # Install dependencies
 printf "Installing dependencies...\n\n"
 sleep 3
-sudo apt-get install software-properties-common f3 smartmontools tmux
+sudo apt-get install -y software-properties-common f3 smartmontools tmux sg3-utils
 
-# Installation de ZFS
+# ZFS Install
 # https://openzfs.github.io/openzfs-docs/Getting%20Started/Debian/index.html#installation
 
 # Check if at least one drive is provided

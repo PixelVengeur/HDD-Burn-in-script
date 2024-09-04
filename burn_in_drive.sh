@@ -9,9 +9,7 @@ fi
 drive="$1"
 drive_name=$(basename "$drive")
 
-printf '=%.0s' {1..40}; echo
 echo "Processing drive $drive"
-printf '=%.0s' {1..40}; echo
 
 # exit 80
 
@@ -65,7 +63,7 @@ logical_sector_size=$(sg_format /dev/sdh | awk '{ FS="=";} /Logical block size=/
 # source: https://www.truenas.com/community/threads/troubleshooting-disk-format-warnings-in-truenas-scale.106051/
 if [[ logical_sector_size -ne physical_sector_size ]]
 then
-    printf "\n\nPhysical and Logical sector sizes are different: %s/%s" "$physical_sector_size" "$logical_sector_size"
+    printf "\n\nPhysical and Logical sector sizes are different: %s/%s\n" "$physical_sector_size" "$logical_sector_size"
     echo "Running sg_format with sector size $physical_sector_size on $drive"
     time sg_format -v -F -s "$physical_sector_size" "$drive"
 fi
@@ -81,27 +79,27 @@ then
 fi
 
 # ZFS operations
-printf "\n\nRunning ZFS operations on %s" "$drive"
+printf "\n\nRunning ZFS operations on %s\n" "$drive"
 
-printf "\tCreating pool %s" "TESTPOOL_${drive_name}"
+printf "\tCreating pool %s" "TESTPOOL_${drive_name}\n"
 sudo zpool create -f -o ashift=12 -O logbias=throughput -O compress=lz4 -O dedup=off -O atime=off -O xattr=sa -m "/mnt/TESTPOOL_${drive_name}" "TESTPOOL_${drive_name}" "$drive"
-printf "\tExporting pool %s" "TESTPOOL_${drive_name}"
+printf "\tExporting pool %s" "TESTPOOL_${drive_name}\n"
 sudo zpool export "TESTPOOL_${drive_name}"
-printf "\tImporting pool %s" "TESTPOOL_${drive_name}"
+printf "\tImporting pool %s" "TESTPOOL_${drive_name}\n"
 sudo zpool import -d /dev/disk/by-id "TESTPOOL_${drive_name}"
-printf "\tSetting permissions on pool %s" "TESTPOOL_${drive_name}"
+printf "\tSetting permissions on pool %s" "TESTPOOL_${drive_name}\n"
 sudo chmod -R ugo+rw "/mnt/TESTPOOL_${drive_name}"
 
 # f3write and f3read tests
-printf "\n\nRunning f3 operations on %s" "$drive"
-printf "\tRunning f3write over %s" "$drive"
+printf "\n\nRunning f3 operations on %s\n" "$drive"
+printf "\tRunning f3write over %s\n" "$drive"
 sudo f3write "/TESTPOOL_${drive_name}"
-printf "\tRunning f3read over %s" "$drive"
+printf "\tRunning f3read over %s\n" "$drive"
 sudo f3read "/TESTPOOL_${drive_name}"
-printf "\tRunning zpool_scrub on %s" "TESTPOOL_${drive_name}"
+printf "\tRunning zpool_scrub on %s\n" "TESTPOOL_${drive_name}"
 sudo zpool scrub "TESTPOOL_${drive_name}"
 
-printf "\n\nFinished processing %s" "$drive"
-printf "%s has passed all tests and is now safe to use" "$drive"
+printf "\n\nFinished processing %s\n" "$drive"
+printf "%s has passed all tests and is now safe to use\n" "$drive"
 
 exec bash
