@@ -85,13 +85,13 @@ wipefs -a "$drive"
 # ZFS operations
 printf "\n\nRunning ZFS operations on %s\n" "$drive"
 
-printf "\tCreating pool %s" "TESTPOOL_${drive_name}\n"
+printf "\tCreating pool %s\n" "TESTPOOL_${drive_name}"
 sudo zpool create -f -o ashift=12 -O logbias=throughput -O compress=lz4 -O dedup=off -O atime=off -O xattr=sa -m "/mnt/TESTPOOL_${drive_name}" "TESTPOOL_${drive_name}" "$drive"
-printf "\tExporting pool %s" "TESTPOOL_${drive_name}\n"
+printf "\tExporting pool %s\n" "TESTPOOL_${drive_name}"
 sudo zpool export "TESTPOOL_${drive_name}"
-printf "\tImporting pool %s" "TESTPOOL_${drive_name}\n"
+printf "\tImporting pool %s\n" "TESTPOOL_${drive_name}"
 sudo zpool import -d /dev/disk/by-id "TESTPOOL_${drive_name}"
-printf "\tSetting permissions on pool %s" "TESTPOOL_${drive_name}\n"
+printf "\tSetting permissions on pool %s\n" "TESTPOOL_${drive_name}"
 sudo chmod -R ugo+rw "/mnt/TESTPOOL_${drive_name}"
 
 # f3write and f3read tests
