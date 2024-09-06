@@ -21,13 +21,14 @@ tmux new-session -d -s burnin_session
 first_pane=true
 for drive in "$@"
 do
+    drive_name=$(basename "$drive")
     # If this is the first pane, just select it; otherwise, split the window
     if $first_pane
     then
         first_pane=false
-        tmux send-keys "bash burn_in_drive.sh $drive" C-m
+        tmux send-keys "bash burn_in_drive.sh $drive |tee '/tmp/${drive_name}_badblocks.log'" C-m
     else
-        tmux split-window -v "bash burn_in_drive.sh $drive"
+        tmux split-window -v "bash burn_in_drive.sh $drive |tee '/tmp/${drive_name}_badblocks.log'"
         tmux select-layout tiled
     fi
 done
