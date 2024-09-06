@@ -80,7 +80,11 @@ then
     sudo badblocks -b 512 -c 65535 -wsv "$drive" > "/tmp/${drive_name}_badblocks.log"
 fi
 
+printf "Destroying leftover data and partition table on %s\n" "$drive"
 wipefs -a "$drive"
+sgdisk --zap-all "$drive"
+printf "Informing the kernel of partition table changes on %s\n" "$drive"
+partprobe
 
 # ZFS operations
 printf "\n\nRunning ZFS operations on %s\n" "$drive"

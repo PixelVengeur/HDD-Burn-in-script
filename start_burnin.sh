@@ -3,7 +3,7 @@
 # Install dependencies
 printf "Installing dependencies...\n\n"
 #sleep 3
-sudo apt-get install -y software-properties-common f3 smartmontools tmux sg3-utils htop sysstat
+sudo apt-get install -y software-properties-common f3 smartmontools tmux sg3-utils htop sysstat gdisk parted
 
 # ZFS Install
 # https://openzfs.github.io/openzfs-docs/Getting%20Started/Debian/index.html#installation
