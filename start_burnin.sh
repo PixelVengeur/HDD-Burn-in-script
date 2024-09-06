@@ -2,8 +2,8 @@
 
 # Install dependencies
 printf "Installing dependencies...\n\n"
-sleep 3
-sudo apt-get install -y software-properties-common f3 smartmontools tmux sg3-utils
+#sleep 3
+sudo apt-get install -y software-properties-common f3 smartmontools tmux sg3-utils htop sysstat
 
 # ZFS Install
 # https://openzfs.github.io/openzfs-docs/Getting%20Started/Debian/index.html#installation
@@ -31,6 +31,11 @@ do
         tmux select-layout tiled
     fi
 done
+
+# Add htop and iostat to the display
+tmux split-window -v "htop"
+tmux split-window -v "iostat -dhs 1"
+tmux select-layout tiled
 
 # Attach to the tmux session to show it in the current terminal
 tmux attach-session -t burnin_session
