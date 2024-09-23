@@ -14,6 +14,10 @@ if [ "$#" -lt 1 ]; then
     exit 1
 fi
 
+# Delete previous records of passes
+rm -r /tmp/sd*_burnin.log
+rm -r /tmp/sd*_badblocks.log
+
 # Create a new tmux session
 tmux new-session -d -s burnin_session
 
@@ -34,7 +38,7 @@ do
 done
 
 # Add htop and iostat to the display
-tmux split-window -v "htop"
+tmux split-window -v "htop -u nobody"
 tmux split-window -v "iostat -dhs 1"
 tmux select-layout tiled
 

@@ -72,12 +72,13 @@ fi
 
 # Run badblocks
 printf "\n\nRunning badblocks on %s\n" "$drive"
+touch "/tmp/${drive_name}_badblocks"
 if [[ physical_sector_size -eq 4096 ]];
 then
-    sudo badblocks -b 4096 -c 65535 -wsv "$drive"
+    sudo badblocks -b 4096 -c 65535 -wsv -o "/tmp/${drive_name}_badblocks" "$drive"
 elif [[ physical_sector_size -eq 512 ]];
 then
-    sudo badblocks -b 512 -c 65535 -wsv "$drive"
+    sudo badblocks -b 512 -c 65535 -wsv -o "/tmp/${drive_name}_badblocks" "$drive"
 fi
 
 printf "Destroying leftover data and partition table on %s\n" "$drive"
@@ -102,19 +103,19 @@ sudo chmod -R ugo+rw "/mnt/TESTPOOL_${drive_name}"
 printf "\n\nRunning f3 operations on %s\n" "$drive"
 
 printf "\tRunning f3write over %s\n\n" "$drive"
-sudo f3write "/mnt/TESTPOOL_${drive_name}"
+sudo time f3write "/mnt/TESTPOOL_${drive_name}"
 printf "\tRunning f3read over %s\n\n" "$drive"
-sudo f3read "/mnt/TESTPOOL_${drive_name}"
+sudo time f3read "/mnt/TESTPOOL_${drive_name}"
 
 # Checking data integrity
 printf "Checking data integrity via ZFS\n"
 
 printf "\tRunning zpool_scrub on %s\n\n" "TESTPOOL_${drive_name}"
-sudo zpool scrub "TESTPOOL_${drive_name}"
+sudo time zpool scrub "TESTPOOL_${drive_name}"
 printf "\t Destroying pool %s\n" "TESTPOOL_${drive_name}"
 sudo zpool destroy "TESTPOOL_${drive_name}"
 
 printf "\n\nFinished processing %s\n" "$drive"
-printf "If all tests passed, the drive is now safe to use\n" "$drive"
+echo "If all tests passed, the drive is now safe to use" "$drive"
 
 exec bash
