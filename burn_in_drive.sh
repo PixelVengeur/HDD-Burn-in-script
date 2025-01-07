@@ -9,6 +9,8 @@ fi
 drive="$1"
 drive_name=$(basename "$drive")
 
+tmux select-pane -T "$drive"
+
 echo "Processing drive $drive"
 
 # exit 80
