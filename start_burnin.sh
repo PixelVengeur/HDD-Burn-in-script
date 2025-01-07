@@ -20,6 +20,7 @@ rm -r /tmp/sd*_badblocks.log
 
 # Create a new tmux session
 tmux new-session -d -s burnin_session
+tmux set -g pane-border-status top
 
 # Loop through each provided drive
 first_pane=true
