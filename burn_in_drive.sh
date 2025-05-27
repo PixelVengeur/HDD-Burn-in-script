@@ -13,7 +13,7 @@ tmux select-pane -T "$drive"
 
 echo "Processing drive $drive"
 
-# exit 80
+tmux select-pane -T "$drive"
 
 # Smartctl checks
 if [[ "$drive" == /dev/nvme* ]]; then
@@ -32,7 +32,7 @@ if [[ "$drive" == /dev/nvme* ]]; then
             echo "SMART test completed for $drive."
             break
         else
-            echo -ne "SMART test for $drive is $status done" \\r
+            echo -ne "SMART test for $drive is $status" \\r
             sleep 30  # Wait 30 seconds before checking again
         fi
     done
@@ -45,13 +45,14 @@ else
     # Wait for the SMART test to complete
     echo "Waiting for SMART test to complete..."
     while true; do
-        status=$(sudo smartctl -l selftest "$drive" |grep "Self-test execution status:" |awk '{print $6}')
+	status=$(sudo smartctl -l selftest "$drive" |grep "Self-test execution status:" |awk -F "status:" '{print $2}' | awk '{$1=$1};1')
         if [ "$status" = "" ]; then
+            echo "DONE"
             echo "SMART test completed for $drive."
             break
         else
-            echo -ne "SMART test for $drive is $status done" \\r
-            sleep 2m  # Wait 1 minute before checking again
+            echo -ne "SMART test for $drive: $status" \\r
+            sleep 30  # Wait 30 seconds before checking again
         fi
     done
 fi
@@ -60,6 +61,7 @@ fi
 
 physical_sector_size=$(sg_format "$drive" |awk '{ FS="=";} /Block size=/ {print $2}' |awk '{ FS=" ";} {print $1}')
 logical_sector_size=$(sg_format "$drive" |awk '{ FS="=";} /Logical block size=/ {print $2}' |awk '{ FS=" ";} {print $1}')
+preferred_sector_size=$(blockdev --getbsz "$drive")
 
 # TODO sg_format les disques s'ils sont en 520 ou 528
 # source: https://www.truenas.com/community/threads/troubleshooting-disk-format-warnings-in-truenas-scale.106051/
@@ -75,13 +77,13 @@ fi
 # Run badblocks
 printf "\n\nRunning badblocks on %s\n" "$drive"
 touch "/tmp/${drive_name}_badblocks"
-if [[ physical_sector_size -eq 4096 ]];
-then
-    sudo badblocks -b 4096 -c 65535 -wsv -o "/tmp/${drive_name}_badblocks" "$drive"
-elif [[ physical_sector_size -eq 512 ]];
-then
-    sudo badblocks -b 512 -c 65535 -wsv -o "/tmp/${drive_name}_badblocks" "$drive"
-fi
+#if [[ physical_sector_size -eq 4096 ]];
+#then
+#    sudo badblocks -b 4096 -c 65535 -wsv -o "/tmp/${drive_name}_badblocks" "$drive"
+#elif [[ physical_sector_size -eq 512 ]];
+#then
+    sudo badblocks -t random -b "$preferred_sector_size" -c 65535 -wsv -o "/tmp/${drive_name}_badblocks" "$drive"
+#fi
 
 printf "Destroying leftover data and partition table on %s\n" "$drive"
 wipefs -a "$drive"
@@ -119,5 +121,7 @@ sudo zpool destroy "TESTPOOL_${drive_name}"
 
 printf "\n\nFinished processing %s\n" "$drive"
 echo "If all tests passed, the drive is now safe to use" "$drive"
+
+nano "/tmp/${drive_name}_burnin.log"
 
 exec bash

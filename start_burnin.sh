@@ -31,15 +31,16 @@ do
     if $first_pane
     then
         first_pane=false
-        tmux send-keys "bash burn_in_drive.sh $drive |tee '/tmp/${drive_name}_badblocks.log'" C-m
+        tmux send-keys "bash burn_in_drive.sh $drive |tee '/tmp/${drive_name}_burnin.log' ||exec bash" C-m
     else
-        tmux split-window -v "bash burn_in_drive.sh $drive |tee '/tmp/${drive_name}_badblocks.log'"
+        tmux split-window -v "bash burn_in_drive.sh $drive |tee '/tmp/${drive_name}_burnin.log' ||exec bash"
         tmux select-layout tiled
     fi
+    sleep 0.5
 done
 
 # Add htop and iostat to the display
-tmux split-window -v "htop -u nobody"
+#tmux split-window -v "htop -u nobody"
 tmux split-window -v "iostat -dhs 1"
 tmux select-layout tiled
 
