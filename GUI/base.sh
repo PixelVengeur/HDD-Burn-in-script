@@ -2,37 +2,42 @@
 
 # Check if the correct amount of arguments is provided
 if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <operations[@]> </path/to/drive>"
-    exit 1
+    echo "Usage: $0 </path/to/drive> <operations[@]>"
+    # exit 1
 fi
 
-drive="$2"
-operations="$1"
-tmux select-pane -T "$drive"
+drive="$1"
+operations="$2"
 
-echo "$drive"
+echo "drive = $drive"
+echo "operations = $operations"
 
 for element in $operations; do
     #echo $element
+    sleep "$(($RANDOM % 10))"
     case $element in
         smart_test)
-            echo "doing a smart test"
+            bash smart_test.sh "$drive"
             ;;
         
         wipe)
-            echo "doing a wipe"
+            bash wipe_drive.sh "$drive"
             ;;
 
         badblocks)
-            echo "doing a badblocks"
+            bash badblocks.sh "$drive"
             ;;
 
         f3)
-            echo "doing a f3"
+            bash f3.sh "$drive"
             ;;
 
         scrub)
-            echo "doing a scrub"
+            bash scrub.sh "$drive"
+            ;;
+
+        format)
+            bash sg_format_drive.sh "$drive"
             ;;
         
         *)
@@ -41,3 +46,5 @@ for element in $operations; do
             
     esac
 done
+
+exec bash

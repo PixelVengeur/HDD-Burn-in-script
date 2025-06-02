@@ -73,6 +73,14 @@ burn_in_drives() {
 
     _operations=$(select_operations)
 
+    # echo "_operations = $_operations & ${#_operations}"
+
+    if [[ "${#_operations}" -eq "" ]]; then
+        echo "Canceled burn in operations"
+        return 1
+        # exit
+    fi
+
     echo "_operations = $_operations"
     echo "_drives = $_drives"
 
@@ -84,15 +92,33 @@ burn_in_drives() {
     tmux new-session -d -s burnin_session
     tmux set -g pane-border-status top
 
-    tmux send-keys "iostat -dhs 1"
+    tmux send-keys "iotop -o -d 1|| exec bash" C-m
+    tmux select-pane -T "iostat"
 
     for drive in $_drives; do
-        drive_name=$(basename "$drive")
-        tmux split-window -v "base.sh ${_operations[*]} $drive |tee '/tmp/${drive_name}_burnin.log' ||exec bash"
-    done
+        cmd=(bash -c '$(pwd)/base.sh "$1" "$2" || exec bash' _ "$drive" "${_operations[*]}")
+        tmux split-window -v "${cmd[@]}"
+        tmux select-pane -T "$drive"
 
-    tmux select-layout tiled
+        tmux select-layout tiled
+
+    done
     tmux a -t burnin_session
+
+    kill=$(
+        whiptail \
+        --yesno \
+        --defaultno \
+        "You have exited tmux. Would you like to kill the session and close all terminals running inside of it?\n\n \
+If you wish to kill the tmux session from another terminal, use tmux kill-session burnin-session" \
+        20 60 \
+        3>&2 2>&1 1>&3; echo $?
+    )
+
+    if [[ "$kill" -eq 0 ]]; then
+        echo "Killing tmux session"
+        tmux kill-session -t burnin_session
+    fi
 }
 
 select_operations() {
@@ -104,6 +130,7 @@ select_operations() {
     --checklist "Select the actions you want to run on the drives.\nThey will be run in the order displayed here." 25 60 15 \
         smart_test "Long S.M.A.R.T. test" on \
         wipe "Full disk wipe" on \
+        sg_format "Format drive to 512b sectors" off \
         badblocks "Badblocks" on \
         f3 "f3write + f3read" on \
         scrub "ZFS scrub" on \
@@ -112,7 +139,8 @@ select_operations() {
     
     exitstatus=$?
     if [ $exitstatus -ne 0 ]; then
-        echo "Canceled selecting operations"
+        echo ""
+        # echo "Canceled selecting operations"
         return 1
     fi
 
@@ -198,13 +226,14 @@ Any flash storage should be checked with a tool such as the Fight Flash Fraud (f
 
     if [ $more_info -eq 1 ]; then
         whiptail \
+        --clear \
         --msgbox \
-        "8+ TB mechanical drives are flaky with Badblocks. It is a great tool, but was designed for 32 bit systems, and the number of 512b sectors in an 8 TB drive is over the 32 bits signed integer limit\n"\
-        "The reason it might work is that, if the drive is new enough, its preferred sector size is 4096b" \
-        35 100
+        "8+ TB mechanical drives are flaky with Badblocks. It is a great tool, but was designed for 32 bit systems, and the number of 512b sectors in an 8 TB drive is over the 32 bits signed integer limit.\n\n \
+The reason it might work is that, if the drive is new enough, it will use Advanced Format, making its preferred sector size 4096b, artificially augmenting the number of adressable blocks by a factor of 8.\n\n \
+Please note that, due to sector revectoring the drive level, the OS will most likely not be able to see all bad sectors, but only those who overflow the provided buffer of sectors at manufacturing time." \
+        35 100 \
+        3>&2 2>&1 1>&3; echo $?
     fi
-
-
 }
 
 exit_script() {

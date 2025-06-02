@@ -83,6 +83,8 @@ touch "/tmp/${drive_name}_badblocks"
 #elif [[ physical_sector_size -eq 512 ]];
 #then
     sudo badblocks -t random -b "$preferred_sector_size" -c 65535 -wsv -o "/tmp/${drive_name}_badblocks" "$drive"
+    # 65535 * 4096b ~= 256 MB
+    # 65535*512b ~= 64 MB
 #fi
 
 printf "Destroying leftover data and partition table on %s\n" "$drive"
