@@ -14,7 +14,7 @@ if [ "$#" -lt 1 ]; then
     exit 1
 fi
 
-# Delete previous records of passes
+# Delete records of previous passes
 rm -r /tmp/sd*_burnin.log
 rm -r /tmp/sd*_badblocks.log
 

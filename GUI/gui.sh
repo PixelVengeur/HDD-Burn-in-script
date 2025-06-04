@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Check for the presence of the whiptail library
-# TODO
+# TODO Check for the presence of the whiptail library
 SELECTED_DRIVES=()
 
 show_drives_in_dialog() {
@@ -96,7 +95,8 @@ burn_in_drives() {
     tmux select-pane -T "iostat"
 
     for drive in $_drives; do
-        cmd=(bash -c '$(pwd)/base.sh "$1" "$2" || exec bash' _ "$drive" "${_operations[*]}")
+        drive_name=$(basename "$drive")
+        cmd=(bash -c '$(pwd)/base.sh "$1" "$3" | tee "/tmp/$2_burnin.log" || exec bash' _ "$drive" "$drive_name" "${_operations[*]}")
         tmux split-window -v "${cmd[@]}"
         tmux select-pane -T "$drive"
 
@@ -110,7 +110,8 @@ burn_in_drives() {
         --yesno \
         --defaultno \
         "You have exited tmux. Would you like to kill the session and close all terminals running inside of it?\n\n \
-If you wish to kill the tmux session from another terminal, use tmux kill-session burnin-session" \
+If you wish to kill the tmux session from another terminal, use <tmux kill-session -t burnin-session>.\n
+If you wish to re-open the tmux session from another terminal, use <tmux a -t burnin_session>." \
         20 60 \
         3>&2 2>&1 1>&3; echo $?
     )
@@ -130,10 +131,9 @@ select_operations() {
     --checklist "Select the actions you want to run on the drives.\nThey will be run in the order displayed here." 25 60 15 \
         smart_test "Long S.M.A.R.T. test" on \
         wipe "Full disk wipe" on \
-        sg_format "Format drive to 512b sectors" off \
+        format "Format drive to 512b sectors" off \
         badblocks "Badblocks" on \
-        f3 "f3write + f3read" on \
-        scrub "ZFS scrub" on \
+        scrub "ZFS scrub + f3write + f3read" on \
     3>&2 2>&1 1>&3
     )
     

@@ -3,7 +3,7 @@
 # Check if the correct amount of arguments is provided
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 </path/to/drive> <operations[@]>"
-    # exit 1
+    exit 1
 fi
 
 drive="$1"
@@ -14,7 +14,7 @@ echo "operations = $operations"
 
 for element in $operations; do
     #echo $element
-    sleep "$(($RANDOM % 10))"
+    # sleep "$(($RANDOM % 10))"
     case $element in
         smart_test)
             bash smart_test.sh "$drive"
@@ -28,16 +28,12 @@ for element in $operations; do
             bash badblocks.sh "$drive"
             ;;
 
-        f3)
-            bash f3.sh "$drive"
-            ;;
-
         scrub)
             bash scrub.sh "$drive"
             ;;
 
         format)
-            bash sg_format_drive.sh "$drive"
+            bash sg_format_drive.sh "$drive" 1
             ;;
         
         *)
