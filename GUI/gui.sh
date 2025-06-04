@@ -3,20 +3,20 @@
 # TODO Check for the presence of the whiptail library
 dependencies_present=$(bash dependencies.sh)
 
-case $dependencies_present in
+case $? in
     1)
         echo "Please check the log above and install the missing dependencies"
         exit 1
         ;;
 
     2)
-        echo "Please install the openZFS release for Debian"
+        printf "\n\nPlease install the openZFS release for Debian"
         echo "See https://openzfs.github.io/openzfs-docs/Getting%20Started/Debian/index.html#installation"
         exit 2
         ;;
 
     *)
-        echo "Dependencies installed successfully"
+        echo "Dependencies checked successfully"
         ;;
 esac
 
