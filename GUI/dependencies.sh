@@ -1,23 +1,35 @@
 #!/bin/bash
 
 # Check if the correct amount of arguments is provided
-if [ "$#" -ne 0 ]; then
-    echo "Too many arguments"
-    echo "Usage: $0 "
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <space-separated string of packages to install>"
     exit 1
 fi
 
-packages_to_install="software-properties-common f3 smartmontools tmux sg3-utils sysstat gdisk parted time"
+packages_to_install=$1
 
 # sudo apt-get install -y $packages_to_install
 
 if ! dpkg -s $packages_to_install &> /dev/null; then
     # Packages not installed
+    missing_packages=()
     for pekij in $packages_to_install; do
-        if ! result=$(dpkg -s $pekij); then
+        if ! result=$(dpkg -s "$pekij"); then
             echo "$result"
+            missing_packages+=("$pekij")
         fi
     done
+
+    echo "Missing packages were detected: ${missing_packages[*]}"
+    read -rp "Do you want to install the missing packages? (y/N) " install
+    install=${install:-"N"}
+
+    if [ $install = "y" ] || [ $install = "yes" ]; then
+        echo "Installing missing packages"
+        sudo apt-get install -y "${missing_packages[*]}"
+
+        exit 0
+    fi
 
     exit 1
 fi

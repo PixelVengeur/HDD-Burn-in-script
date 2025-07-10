@@ -1,16 +1,17 @@
 #!/bin/bash
 
 # TODO Check for the presence of the whiptail library
-dependencies_present=$(bash dependencies.sh)
+packages_to_install="software-properties-common f3 smartmontools tmux sg3-utils sysstat gdisk parted time"
+bash dependencies.sh "$packages_to_install"
 
 case $? in
     1)
-        echo "Please check the log above and install the missing dependencies"
+        printf "\n\nPlease check the log above carefully, and install the missing dependencies, as they weren't able to be installed automatically\n"
         exit 1
         ;;
 
     2)
-        printf "\n\nPlease install the openZFS release for Debian"
+        printf "\n\nPlease install the openZFS release for Debian\n"
         echo "See https://openzfs.github.io/openzfs-docs/Getting%20Started/Debian/index.html#installation"
         exit 2
         ;;
@@ -104,14 +105,14 @@ burn_in_drives() {
 
     # Delete previous records of passes
     rm -r /tmp/sd*_burnin.log
-    rm -r /tmp/sd*_badblocks.log
+    rm -r /tmp/sd*_badblocks
 
     # tmux setup
     tmux new-session -d -s burnin_session
     tmux set -g pane-border-status top
 
     tmux send-keys "iotop -o -d 1|| exec bash" C-m
-    tmux select-pane -T "iostat"
+    tmux select-pane -T "iotop"
 
     for drive in $_drives; do
         drive_name=$(basename "$drive")
@@ -159,7 +160,7 @@ select_operations() {
     exitstatus=$?
     if [ $exitstatus -ne 0 ]; then
         echo ""
-        # echo "Canceled selecting operations"
+        echo "Canceled selecting operations"
         return 1
     fi
 
@@ -168,10 +169,10 @@ select_operations() {
 }
 
 erase_drives() {
-    local -a _passed_array=($1)
+    local -a _drives=("${SELECTED_DRIVES[*]}")
 
-    # echo "Size of ${_passed_array[*]} is ${#_passed_array[@]}"
-    if [[ ${#_passed_array[@]} -eq 0 ]]; then
+    # echo "Size of ${_drives[*]} is ${#_drives[@]}"
+    if [[ ${#_drives[@]} -eq 0 ]]; then
         whiptail \
         --clear \
         --msgbox "Please select at least one drive to erase" 10 50
@@ -183,7 +184,7 @@ erase_drives() {
         whiptail \
         --clear \
         --title "Drive erasure confirmation" \
-        --yesno "You have selected to erase the following drives:\n${_passed_array[*]}.\n\nAre you sure?" 25 75 \
+        --yesno "You have selected to erase the following drives:\n${_drives[*]}.\n\nAre you sure?" 25 75 \
         --defaultno \
         3>&2 2>&1 1>&3; echo $? \
     )
@@ -209,7 +210,11 @@ erase_drives() {
             return 2
         fi
 
-        # TODO Wipe drives
+        for drive in $_drives; do
+            drive_name=$(basename "$drive")
+            bash -c '$(pwd)/wipe_drive.sh "$0" | tee "/tmp/$1_burnin.log"' "$drive" "$drive_name"
+
+        done
     fi
 
     
